@@ -1,15 +1,13 @@
 package user
 
-type User struct {
-	Id uint64
-	UserName string
-	// other stats
-}
+import (
+	m "github.com/SteveMCWin/archetype-common/models"
+)
 
-func Load() (User, error) {
+func Load() (m.User, error) {
 	// TODO:
 	// Look into data file for credentials and send a get request to the server.
 	// If the credentials are wrong or there are not correct, return an empty user.
 	// Otherwise parse the response and load the data accordingly
-	return User{}, nil
+	return m.User{}, nil
 }
