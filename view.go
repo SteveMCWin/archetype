@@ -6,20 +6,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var (
-	inactiveTabBorder = lipgloss.Border{Top: "─", Bottom: "─", Left: "│", Right: "│", TopLeft: "╭", TopRight: "╮", BottomLeft: "┴", BottomRight: "┴"}
-	activeTabBorder   = lipgloss.Border{Top: "─", Bottom: " ", Left: "│", Right: "│", TopLeft: "╭", TopRight: "╮", BottomLeft: "┘", BottomRight: "└"}
-	tabGapBorderLeft  = lipgloss.Border{Bottom: "─", BottomLeft: "╭", BottomRight: "─"}
-	tabGapBorderRight = lipgloss.Border{Bottom: "─", BottomLeft: "─", BottomRight: "╮"}
-	docStyle          = lipgloss.NewStyle().Padding(1, 2, 1, 2)
-	highlightColor    = lipgloss.AdaptiveColor{Light: "#874BFD", Dark: "#7D56F4"}
-	inactiveTabStyle  = lipgloss.NewStyle().Border(inactiveTabBorder, true).BorderForeground(highlightColor).Padding(0, 1)
-	activeTabStyle    = inactiveTabStyle.Border(activeTabBorder, true)
-	tabGapLeft        = inactiveTabStyle.Border(tabGapBorderLeft, true)
-	tabGapRight       = inactiveTabStyle.Border(tabGapBorderRight, true)
-	windowStyle       = lipgloss.NewStyle().BorderForeground(highlightColor).Padding(2, 0).Align(lipgloss.Center).Border(lipgloss.RoundedBorder()).UnsetBorderTop()
-)
-
 func (m Model) View() string {
 	doc := strings.Builder{}
 
@@ -27,7 +13,7 @@ func (m Model) View() string {
 
 	for i, t := range m.tabs {
 		var style lipgloss.Style
-		isActive := i == m.currentTab
+		isActive := i == int(m.currentTab)
 		if isActive {
 			style = activeTabStyle
 		} else {

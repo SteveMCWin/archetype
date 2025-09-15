@@ -26,3 +26,4 @@ go.work.sum
 
 archetype
 data/*
+debug.log
