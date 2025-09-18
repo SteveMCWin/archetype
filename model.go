@@ -70,6 +70,7 @@ type Model struct {
 	typedLen       int
 	wordsTyped     int
 	quoteCompleted bool
+	quoteLoaded    bool
 }
 
 func NewModel() Model {
@@ -83,7 +84,7 @@ func NewModel() Model {
 		},
 		currTab:  Home,
 		theme:    DefaultTheme,
-		isTyping: false,
+		isTyping: true,
 	}
 }
 
@@ -173,9 +174,20 @@ func (m Model) Init() tea.Cmd {
 		SetCurrentTheme(m.theme),
 		tea.SetWindowTitle("Archetype"),
 		GetQuoteFromServer(mod.QUOTE_SHORT),
+		tea.ShowCursor,
 	}
 
 	return tea.Batch(cmds...) // NOTE: set curr theme should be replaced with a function that loads save data and that handles the theme
+}
+
+func ResetTyingData(m *Model) {
+	m.typedErr = ""
+	m.isTyping = true
+	m.quoteLoaded = false
+	m.wordsTyped = 0
+	m.typedWord = ""
+	m.typedQuote = ""
+	m.quoteCompleted = false
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -188,23 +200,35 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			seq := tea.Sequence(ChangeFontSize(&m.terminal, 0, true), tea.Quit)
 			cmds = append(cmds, seq)
 		case "right", "tab":
-			m.currTab = TabIndex((int(m.currTab) + 1) % len(m.tabs))
+			if !m.isTyping {
+				m.currTab = TabIndex((int(m.currTab) + 1) % len(m.tabs))
+			}
 		case "left", "shift+tab":
-			m.currTab = TabIndex((len(m.tabs) + int(m.currTab) - 1) % len(m.tabs))
+			if !m.isTyping {
+				m.currTab = TabIndex((len(m.tabs) + int(m.currTab) - 1) % len(m.tabs))
+			}
 		case "ctrl+r":
-			m.wordsTyped = 0
-			m.typedWord = ""
-			m.typedQuote = ""
-			m.quoteCompleted = false
-			cmds = append(cmds, GetQuoteFromServer(mod.QUOTE_SHORT))
+			ResetTyingData(&m)
+			cmds = append(cmds, GetQuoteFromServer(mod.QUOTE_MEDIUM))
 		case "ctrl+up":
 			cmds = append(cmds, ChangeFontSize(&m.terminal, 1, true))
 		case "ctrl+down":
 			cmds = append(cmds, ChangeFontSize(&m.terminal, 1, false))
-		case "ctrl+backspace":
-
+		case "enter":
+			if m.currTab == Home {
+				m.isTyping = true
+				cmds = append(cmds, tea.ShowCursor)
+			}
+		case "esc":
+			if m.isTyping {
+				cmds = append(cmds, tea.HideCursor)
+				m.isTyping = false
+				// stop the test or something
+			}
 		default:
-			HandleTyping(&m, msg.String())
+			if m.isTyping {
+				HandleTyping(&m, msg.String())
+			}
 		}
 	case HttpStatus:
 		if int(msg) == http.StatusOK {
@@ -216,11 +240,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.windowWidth = msg.Width
 		m.windowHeight = msg.Height
 	case mod.Quote:
+		m.quoteLoaded = true
 		m.quote = msg
 		m.splitQuote = strings.Split(m.quote.Quote, " ")
 		m.typedLen = len(m.splitQuote[m.wordsTyped])
 		m.tabs[Home].Contents = m.quote.Quote
-		log.Println("Chagned the contents to:", m.tabs[Home].Contents)
 	case SupportedTerminals:
 		m.terminal = msg
 	}
@@ -263,6 +287,7 @@ func HandleTyping(m *Model, key string) {
 
 		if m.wordsTyped+1 == len(m.splitQuote) && m.typedWord == m.splitQuote[m.wordsTyped] {
 			m.quoteCompleted = true
+			m.isTyping = false
 			log.Println("COMPLETED QUOTE!!!")
 		}
 	}

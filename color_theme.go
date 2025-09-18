@@ -6,16 +6,22 @@ import (
 )
 
 type ColorTheme struct {
-	Primary   lipgloss.AdaptiveColor
-	Secondary lipgloss.AdaptiveColor
-	Accent    lipgloss.AdaptiveColor
+	Primary    lipgloss.AdaptiveColor
+	Secondary  lipgloss.AdaptiveColor
+	Accent     lipgloss.AdaptiveColor
+	TextError  lipgloss.AdaptiveColor
+	TextTyped  lipgloss.AdaptiveColor
+	TextUnyped lipgloss.AdaptiveColor
 }
 
 var (
 	DefaultTheme = ColorTheme{
-		Primary:   lipgloss.AdaptiveColor{Dark: "#1e1e2e", Light: "#6c7086"},
-		Secondary: lipgloss.AdaptiveColor{Dark: "#6c7086", Light: "#acb0be"},
-		Accent:    lipgloss.AdaptiveColor{Dark: "#89b4fa", Light: "#1e66f5"},
+		Primary:    lipgloss.AdaptiveColor{Dark: "#1e1e2e", Light: "#6c7086"},
+		Secondary:  lipgloss.AdaptiveColor{Dark: "#6c7086", Light: "#acb0be"},
+		Accent:     lipgloss.AdaptiveColor{Dark: "#89b4fa", Light: "#1e66f5"},
+		TextError:  lipgloss.AdaptiveColor{Dark: "#dd8888", Light: "#dd8888"},
+		TextTyped:  lipgloss.AdaptiveColor{Dark: "#ffffff", Light: "#000000"},
+		TextUnyped: lipgloss.AdaptiveColor{Dark: "#aaaaaa", Light: "#444444"},
 	}
 )
 
@@ -29,10 +35,10 @@ var (
 	activeTabStyle    = inactiveTabStyle.Border(activeTabBorder, true)
 	tabGapLeft        = inactiveTabStyle.Border(tabGapBorderLeft, true)
 	tabGapRight       = inactiveTabStyle.Border(tabGapBorderRight, true)
-	windowStyle       = lipgloss.NewStyle().Padding(2, 0).Align(lipgloss.Center).Border(lipgloss.RoundedBorder()).UnsetBorderTop()
-	quoteStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("#aaaaaa")).Faint(true).Align(lipgloss.Center)
-	typedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Align(lipgloss.Center)
-	errorStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("#dd8888")).Align(lipgloss.Center)
+	windowStyle       = lipgloss.NewStyle().Padding(2, 0).Align(lipgloss.Left, lipgloss.Center).Border(lipgloss.RoundedBorder()).UnsetBorderTop()
+	quoteStyle        = lipgloss.NewStyle().Foreground(DefaultTheme.TextUnyped)
+	typedStyle        = lipgloss.NewStyle().Foreground(DefaultTheme.TextTyped)
+	errorStyle        = lipgloss.NewStyle().Foreground(DefaultTheme.TextError)
 )
 
 func SetCurrentTheme(t ColorTheme) func() tea.Msg {

@@ -20,8 +20,14 @@ func (m Model) View() string {
 		} else {
 			style = inactiveTabStyle
 		}
+
 		border, _, _, _, _ := style.GetBorder()
 		style = style.Border(border)
+
+		if m.isTyping {
+			style = style.Faint(true)
+		}
+
 		renderedTabs = append(renderedTabs, style.Render(t.TabName))
 	}
 
@@ -32,8 +38,36 @@ func (m Model) View() string {
 	row = lipgloss.JoinHorizontal(lipgloss.Top, gap_l, row, gap_r)
 	doc.WriteString(row)
 	doc.WriteString("\n")
+
+	var contents string
+
+	switch m.currTab {
+	case About:
+		contents = m.tabs[m.currTab].Contents
+	case Settings:
+		contents = m.tabs[m.currTab].Contents
+	case Home:
+		contents = GetHomeContents(&m)
+	case Leaderboard:
+		contents = m.tabs[m.currTab].Contents
+	case ProfileView:
+		contents = m.tabs[m.currTab].Contents
+	default:
+	}
+
+	_, err := doc.WriteString(windowStyle.Width(m.windowWidth - windowStyle.GetHorizontalFrameSize()*3).Height(m.windowHeight-windowStyle.GetVerticalFrameSize()).Render(contents))
+	if err != nil {
+		log.Println("Error displaying window and contents:", err)
+	}
+
+	return docStyle.Render(doc.String())
+}
+
+func GetHomeContents(m *Model) string {
+
 	contents := ""
-	if len(m.tabs[m.currTab].Contents) > 6 {
+
+	if m.quoteLoaded && !m.quoteCompleted {
 		curr_word := m.splitQuote[m.wordsTyped]
 
 		correct_chars := len(m.typedWord)
@@ -48,10 +82,14 @@ func (m Model) View() string {
 		contents += errorStyle.Render(m.typedErr[min(len(curr_word)-correct_chars, incorrect_chars):]) // Current word - overtyped
 		
 		contents += quoteStyle.Render(m.quote.Quote[m.typedLen:]) // Rest of the quote
+	} else if m.quoteCompleted {
+		contents = typedStyle.Render("Copleted test!!! :D")
 	}
-	_, err := doc.WriteString(windowStyle.Width(m.windowWidth - windowStyle.GetHorizontalFrameSize()*3).Height(m.windowHeight-windowStyle.GetVerticalFrameSize()).Render(contents))
-	if err != nil {
-		log.Println("Error displaying window and contents:", err)
-	}
-	return docStyle.Render(doc.String())
+
+	// centerStyle := lipgloss.NewStyle().Margin(0, 8)
+	centerStyle := lipgloss.NewStyle().Padding(0, 8)
+	contents = centerStyle.Render(contents)
+
+	return contents
+
 }
