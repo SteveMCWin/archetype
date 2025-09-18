@@ -14,6 +14,11 @@ func main() {
 	defer f.Close()
 	// should check for commandline args
 	m := NewModel()
+
+	log.Println()
+	log.Println("~~~~~~~~~PROGRAM START~~~~~~~~~")
+	log.Println()
+
 	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		log.Fatal("Unable to run tui:", err)

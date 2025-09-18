@@ -30,9 +30,8 @@ var (
 	tabGapLeft        = inactiveTabStyle.Border(tabGapBorderLeft, true)
 	tabGapRight       = inactiveTabStyle.Border(tabGapBorderRight, true)
 	windowStyle       = lipgloss.NewStyle().Padding(2, 0).Align(lipgloss.Center).Border(lipgloss.RoundedBorder()).UnsetBorderTop()
-	quoteStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("#aaaaaa")).Faint(true).Align(lipgloss.Center)
-	typedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Align(lipgloss.Center)
-	errorStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("#dd8888")).Align(lipgloss.Center)
+	quoteStyle        = lipgloss.NewStyle().Foreground(DefaultTheme.Accent).Faint(true).Align(lipgloss.Center)
+	// typedStyle        = quoteStyle.Faint(false)
 )
 
 func SetCurrentTheme(t ColorTheme) func() tea.Msg {
