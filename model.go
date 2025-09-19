@@ -49,6 +49,14 @@ type HttpError struct{ error }
 
 func (e HttpError) Error() string { return e.error.Error() }
 
+type TestStats struct {
+	TypingDuration time.Duration
+
+	Cpm float64
+	Wpm float64
+	Acc float64
+}
+
 type Model struct {
 	windowWidth  int
 	windowHeight int
@@ -65,12 +73,16 @@ type Model struct {
 	quote          mod.Quote
 	typedWord      string
 	typedErr       string
+	numErr         int
 	typedQuote     string
 	splitQuote     []string
 	typedLen       int
 	wordsTyped     int
 	quoteCompleted bool
 	quoteLoaded    bool
+	testBegan      bool
+	startTime      time.Time
+	stats          TestStats
 }
 
 func NewModel() Model {
@@ -181,6 +193,8 @@ func (m Model) Init() tea.Cmd {
 }
 
 func ResetTyingData(m *Model) {
+	m.numErr = 0
+	m.testBegan = false
 	m.typedErr = ""
 	m.isTyping = true
 	m.quoteLoaded = false
@@ -259,6 +273,11 @@ func HandleTyping(m *Model, key string) {
 		return
 	}
 
+	if !m.testBegan {
+		m.testBegan = true
+		m.startTime = time.Now()
+	}
+
 	switch key {
 	case "backspace":
 		if m.typedErr != "" {
@@ -280,6 +299,7 @@ func HandleTyping(m *Model, key string) {
 		m.typedWord = ""
 	default:
 		if m.typedErr != "" || key != m.splitQuote[m.wordsTyped][len(m.typedWord):min(len(m.typedWord)+1, len(m.splitQuote[m.wordsTyped]))] {
+			m.numErr++
 			m.typedErr += key
 			return
 		}
@@ -288,8 +308,24 @@ func HandleTyping(m *Model, key string) {
 		if m.wordsTyped+1 == len(m.splitQuote) && m.typedWord == m.splitQuote[m.wordsTyped] {
 			m.quoteCompleted = true
 			m.isTyping = false
+			SetStats(m)
 			log.Println("COMPLETED QUOTE!!!")
+			log.Printf("\nDur:%s\nCpm:%f\nWpm:%f\nAcc:%f\n", m.stats.TypingDuration.String(), m.stats.Cpm, m.stats.Wpm, m.stats.Acc)
 		}
 	}
 
+}
+
+func SetStats(m *Model) {
+	dur := time.Since(m.startTime)
+	cpm := float64(time.Minute/dur) * float64(len(m.quote.Quote))
+	wpm := cpm/4.7
+	acc :=  100.0 * (float64(len(m.quote.Quote)-m.numErr) / float64(len(m.quote.Quote)))
+	m.stats = TestStats{
+		TypingDuration: dur,
+
+		Cpm: cpm,
+		Wpm: wpm,
+		Acc: acc,
+	}
 }
