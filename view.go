@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -84,6 +85,14 @@ func GetHomeContents(m *Model) string {
 		contents += quoteStyle.Render(m.quote.Quote[m.typedLen:]) // Rest of the quote
 	} else if m.quoteCompleted {
 		contents = typedStyle.Render("Copleted test!!! :D")
+
+	// TypingDuration time.Duration
+	//
+	// Cpm float64
+	// Wpm float64
+	// Acc float64
+		stats_str := fmt.Sprintf("\nWPM: %f\nCPM: %f\nACC: %f\n", m.stats.Wpm, m.stats.Cpm, m.stats.Acc)
+		contents += typedStyle.Render(stats_str)
 	}
 
 	// centerStyle := lipgloss.NewStyle().Margin(0, 8)
