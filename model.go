@@ -267,7 +267,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func HandleTyping(m *Model, key string) {
-	// log.Println("key:", key)
+	log.Println("key:", key)
 
 	if m.quoteCompleted {
 		return
@@ -309,8 +309,6 @@ func HandleTyping(m *Model, key string) {
 			m.quoteCompleted = true
 			m.isTyping = false
 			SetStats(m)
-			log.Println("COMPLETED QUOTE!!!")
-			log.Printf("\nDur:%s\nCpm:%f\nWpm:%f\nAcc:%f\n", m.stats.TypingDuration.String(), m.stats.Cpm, m.stats.Wpm, m.stats.Acc)
 		}
 	}
 
@@ -318,9 +316,15 @@ func HandleTyping(m *Model, key string) {
 
 func SetStats(m *Model) {
 	dur := time.Since(m.startTime)
-	cpm := float64(time.Minute/dur) * float64(len(m.quote.Quote))
+
+	cpm := float64(time.Minute.Milliseconds())/float64(dur.Milliseconds()) * float64(len(m.quote.Quote))
 	wpm := cpm/4.7
 	acc :=  100.0 * (float64(len(m.quote.Quote)-m.numErr) / float64(len(m.quote.Quote)))
+
+	log.Println("Duration:", dur.String())
+	log.Println("String len:", len(m.quote.Quote))
+	log.Printf("Cpm: %f", cpm)
+
 	m.stats = TestStats{
 		TypingDuration: dur,
 
