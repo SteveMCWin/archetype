@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	// "os"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	// "github.com/muesli/termenv"
 )
 
 func (m Model) View() string {
@@ -56,7 +58,7 @@ func (m Model) View() string {
 	default:
 	}
 
-	_, err := doc.WriteString(windowStyle.Width(m.windowWidth - windowStyle.GetHorizontalFrameSize()*3).Height(m.windowHeight-windowStyle.GetVerticalFrameSize()).Render(contents))
+	_, err := doc.WriteString(windowStyle.Width(m.windowWidth - windowStyle.GetHorizontalFrameSize()*3).Height(m.windowHeight-windowStyle.GetVerticalFrameSize()).Render(contents)) // real hacky
 	if err != nil {
 		log.Println("Error displaying window and contents:", err)
 	}
@@ -69,6 +71,11 @@ func GetHomeContents(m *Model) string {
 	contents := ""
 
 	if m.quoteLoaded && !m.quoteCompleted {
+
+		// output.CursorForward(1)
+		// output.AltScreen()
+		// output.MoveCursor(m.cursorRow, m.cursorCol)
+
 		curr_word := m.splitQuote[m.wordsTyped]
 
 		correct_chars := len(m.typedWord)
@@ -83,6 +90,9 @@ func GetHomeContents(m *Model) string {
 		contents += errorStyle.Render(m.typedErr[min(len(curr_word)-correct_chars, incorrect_chars):]) // Current word - overtyped
 		
 		contents += quoteStyle.Render(m.quote.Quote[m.typedLen:]) // Rest of the quote
+
+		// output := termenv.NewOutput(os.Stdout)
+
 	} else if m.quoteCompleted {
 		contents = typedStyle.Render("Copleted test!!! :D")
 
@@ -90,10 +100,11 @@ func GetHomeContents(m *Model) string {
 		contents += typedStyle.Render(stats_str)
 	}
 
-	// centerStyle := lipgloss.NewStyle().Margin(0, 8)
-	centerStyle := lipgloss.NewStyle().Padding(0, 8)
+	centerStyle := lipgloss.NewStyle().Padding(0, 12).Width(m.windowWidth-windowStyle.GetHorizontalFrameSize()-2).Align(lipgloss.Center) // real hacky
 	contents = centerStyle.Render(contents)
 
-	return contents
+	m.output.ShowCursor()
+	m.output.MoveCursor(m.cursorRow, m.cursorCol)
 
+	return contents
 }

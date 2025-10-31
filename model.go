@@ -15,6 +15,7 @@ import (
 	mod "github.com/SteveMCWin/archetype-common/models"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 )
 
 type TabIndex uint
@@ -61,6 +62,8 @@ type Model struct {
 	windowWidth  int
 	windowHeight int
 
+	output *termenv.Output
+
 	terminal SupportedTerminals
 	isOnline bool
 	currTab  TabIndex
@@ -83,9 +86,15 @@ type Model struct {
 	testBegan      bool
 	startTime      time.Time
 	stats          TestStats
+
+	cursorRow      int
+	cursorCol      int
 }
 
 func NewModel() Model {
+	o := termenv.NewOutput(os.Stdout)
+	o.ShowCursor()
+
 	return Model{
 		tabs: []Tab{ // WARNING: the tabs must be made in the same order as TabIndex definitions. A fix for this would be to make the tabs field a map
 			{TabSymbol: "  𝕚  ", TabName: "𝕚 About", Contents: "About page"},
@@ -97,6 +106,7 @@ func NewModel() Model {
 		currTab:  Home,
 		theme:    DefaultTheme,
 		isTyping: true,
+		output: o,
 	}
 }
 
@@ -186,7 +196,7 @@ func (m Model) Init() tea.Cmd {
 		SetCurrentTheme(m.theme),
 		tea.SetWindowTitle("Archetype"),
 		GetQuoteFromServer(mod.QUOTE_SHORT),
-		tea.ShowCursor,
+		// tea.ShowCursor,
 	}
 
 	return tea.Batch(cmds...) // NOTE: set curr theme should be replaced with a function that loads save data and that handles the theme
@@ -254,6 +264,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.windowWidth = msg.Width
 		m.windowHeight = msg.Height
 	case mod.Quote:
+		m.cursorCol = 5
+		m.cursorRow = 20
 		m.quoteLoaded = true
 		m.quote = msg
 		m.splitQuote = strings.Split(m.quote.Quote, " ")
@@ -285,18 +297,27 @@ func HandleTyping(m *Model, key string) {
 		} else {
 			m.typedWord = m.typedWord[:max(len(m.typedWord)-1, 0)]
 		}
+		m.cursorCol -= 1
+
+	// this is actually ctrl+backspace
 	case "ctrl+h":
 		m.typedErr = ""
 		m.typedWord = ""
+
 	case " ":
 		if m.typedWord != m.splitQuote[m.wordsTyped] || m.typedErr != "" {
-			m.typedErr += " "
+			// NOTE: prevents starting a word with space, should make modular depending on settings
+			if len(m.typedWord) > 0 {
+				m.typedErr += " "
+			}
 			return
 		}
 		m.wordsTyped++
 		m.typedLen += len(m.splitQuote[m.wordsTyped]) + 1
 		m.typedQuote += m.typedWord + " "
 		m.typedWord = ""
+		m.cursorCol += 1
+
 	default:
 		if m.typedErr != "" || key != m.splitQuote[m.wordsTyped][len(m.typedWord):min(len(m.typedWord)+1, len(m.splitQuote[m.wordsTyped]))] {
 			m.numErr++
@@ -304,6 +325,7 @@ func HandleTyping(m *Model, key string) {
 			return
 		}
 		m.typedWord += key
+		m.cursorCol += 1
 
 		if m.wordsTyped+1 == len(m.splitQuote) && m.typedWord == m.splitQuote[m.wordsTyped] {
 			m.quoteCompleted = true
@@ -317,13 +339,9 @@ func HandleTyping(m *Model, key string) {
 func SetStats(m *Model) {
 	dur := time.Since(m.startTime)
 
-	cpm := float64(time.Minute.Milliseconds())/float64(dur.Milliseconds()) * float64(len(m.quote.Quote))
-	wpm := cpm/4.7
-	acc :=  100.0 * (float64(len(m.quote.Quote)-m.numErr) / float64(len(m.quote.Quote)))
-
-	log.Println("Duration:", dur.String())
-	log.Println("String len:", len(m.quote.Quote))
-	log.Printf("Cpm: %f", cpm)
+	cpm := float64(time.Minute.Milliseconds()) / float64(dur.Milliseconds()) * float64(len(m.quote.Quote))
+	wpm := cpm / 4.7
+	acc := 100.0 * (float64(len(m.quote.Quote)-m.numErr) / float64(len(m.quote.Quote)))
 
 	m.stats = TestStats{
 		TypingDuration: dur,
