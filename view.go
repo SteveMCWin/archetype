@@ -58,7 +58,7 @@ func (m Model) View() string {
 	default:
 	}
 
-	_, err := doc.WriteString(windowStyle.Width(m.windowWidth - windowStyle.GetHorizontalFrameSize()).Height(m.windowHeight-windowStyle.GetVerticalFrameSize()).Render(contents)) // real hacky
+	_, err := doc.WriteString(windowStyle.Width(m.windowWidth - windowStyle.GetHorizontalFrameSize()).Height(m.windowHeight-windowStyle.GetVerticalFrameSize()).Render(contents))
 	if err != nil {
 		log.Println("Error displaying window and contents:", err)
 	}
@@ -93,7 +93,7 @@ func GetHomeContents(m *Model) string {
 		
 		contents += quoteStyle.Render(m.quote.Quote[m.typedLen:]) // Rest of the quote
 
-		m.output.MoveCursor(m.cursorRow, m.cursorCol)
+		// m.output.MoveCursor(m.cursorRow, m.cursorCol)
 
 	} else if m.quoteCompleted {
 		contents = typedStyle.Render("Completed test!!! :D")
@@ -102,8 +102,8 @@ func GetHomeContents(m *Model) string {
 		contents += typedStyle.Render(stats_str)
 	}
 
-	centerStyle := lipgloss.NewStyle().Padding(0, 12).Width(m.windowWidth-windowStyle.GetHorizontalFrameSize()-2)
-	contents = centerStyle.Render(contents)
+	contentStyle := lipgloss.NewStyle().Padding(0, 12).Width(m.windowWidth-windowStyle.GetHorizontalFrameSize()).Align(lipgloss.Left, lipgloss.Center)
+	contents = contentStyle.Render(contents)
 
 	return contents
 }
