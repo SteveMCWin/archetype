@@ -93,7 +93,6 @@ type Model struct {
 
 func NewModel() Model {
 	o := termenv.NewOutput(os.Stdout)
-	o.ShowCursor()
 
 	return Model{
 		tabs: []Tab{ // WARNING: the tabs must be made in the same order as TabIndex definitions. A fix for this would be to make the tabs field a map
@@ -196,7 +195,7 @@ func (m Model) Init() tea.Cmd {
 		SetCurrentTheme(m.theme),
 		tea.SetWindowTitle("Archetype"),
 		GetQuoteFromServer(mod.QUOTE_SHORT),
-		// tea.ShowCursor,
+		tea.ShowCursor,
 	}
 
 	return tea.Batch(cmds...) // NOTE: set curr theme should be replaced with a function that loads save data and that handles the theme

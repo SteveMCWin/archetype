@@ -58,10 +58,12 @@ func (m Model) View() string {
 	default:
 	}
 
-	_, err := doc.WriteString(windowStyle.Width(m.windowWidth - windowStyle.GetHorizontalFrameSize()*3).Height(m.windowHeight-windowStyle.GetVerticalFrameSize()).Render(contents)) // real hacky
+	_, err := doc.WriteString(windowStyle.Width(m.windowWidth - windowStyle.GetHorizontalFrameSize()).Height(m.windowHeight-windowStyle.GetVerticalFrameSize()).Render(contents)) // real hacky
 	if err != nil {
 		log.Println("Error displaying window and contents:", err)
 	}
+
+	// doc.WriteString(fmt.Sprintf("\033[%d;%dH", m.cursorRow, m.cursorCol))
 
 	return docStyle.Render(doc.String())
 }
@@ -91,20 +93,17 @@ func GetHomeContents(m *Model) string {
 		
 		contents += quoteStyle.Render(m.quote.Quote[m.typedLen:]) // Rest of the quote
 
-		// output := termenv.NewOutput(os.Stdout)
+		m.output.MoveCursor(m.cursorRow, m.cursorCol)
 
 	} else if m.quoteCompleted {
-		contents = typedStyle.Render("Copleted test!!! :D")
+		contents = typedStyle.Render("Completed test!!! :D")
 
 		stats_str := fmt.Sprintf("\nWPM: %f\nCPM: %f\nACC: %f\n", m.stats.Wpm, m.stats.Cpm, m.stats.Acc)
 		contents += typedStyle.Render(stats_str)
 	}
 
-	centerStyle := lipgloss.NewStyle().Padding(0, 12).Width(m.windowWidth-windowStyle.GetHorizontalFrameSize()-2).Align(lipgloss.Center) // real hacky
+	centerStyle := lipgloss.NewStyle().Padding(0, 12).Width(m.windowWidth-windowStyle.GetHorizontalFrameSize()-2)
 	contents = centerStyle.Render(contents)
-
-	m.output.ShowCursor()
-	m.output.MoveCursor(m.cursorRow, m.cursorCol)
 
 	return contents
 }
