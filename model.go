@@ -13,9 +13,8 @@ import (
 	"time"
 
 	mod "github.com/SteveMCWin/archetype-common/models"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/muesli/termenv"
+	tea "github.com/charmbracelet/bubbletea/v2"
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 type TabIndex uint
@@ -62,8 +61,6 @@ type Model struct {
 	windowWidth  int
 	windowHeight int
 
-	output *termenv.Output
-
 	terminal SupportedTerminals
 	isOnline bool
 	currTab  TabIndex
@@ -92,7 +89,6 @@ type Model struct {
 }
 
 func NewModel() Model {
-	o := termenv.NewOutput(os.Stdout)
 
 	return Model{
 		tabs: []Tab{ // WARNING: the tabs must be made in the same order as TabIndex definitions. A fix for this would be to make the tabs field a map
@@ -105,7 +101,6 @@ func NewModel() Model {
 		currTab:  Home,
 		theme:    DefaultTheme,
 		isTyping: true,
-		output: o,
 	}
 }
 
@@ -192,7 +187,7 @@ func ChangeFontSize(term *SupportedTerminals, amount int, pos bool) tea.Cmd {
 func (m Model) Init() tea.Cmd {
 	cmds := []tea.Cmd{
 		tea.Sequence(SetTerminal, ChangeFontSize(&m.terminal, 8, true)), // NOTE: Hard coded for testing, the amount should be read from saved user settings
-		SetCurrentTheme(m.theme),
+		m.theme.SetCurrentTheme(true), // NOTE: hard coded for testing
 		tea.SetWindowTitle("Archetype"),
 		GetQuoteFromServer(mod.QUOTE_SHORT),
 		tea.ShowCursor,

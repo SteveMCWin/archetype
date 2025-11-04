@@ -1,27 +1,43 @@
 package main
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"image/color"
+
+	tea "github.com/charmbracelet/bubbletea/v2"
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 type ColorTheme struct {
-	Primary    lipgloss.AdaptiveColor
-	Secondary  lipgloss.AdaptiveColor
-	Accent     lipgloss.AdaptiveColor
-	TextError  lipgloss.AdaptiveColor
-	TextTyped  lipgloss.AdaptiveColor
-	TextUnyped lipgloss.AdaptiveColor
+	Primary    color.Color
+	Secondary  color.Color
+	Accent     color.Color
+	TextError  color.Color
+	TextTyped  color.Color
+	TextUnyped color.Color
+
+	PrimaryLight    color.Color
+	SecondaryLight  color.Color
+	AccentLight     color.Color
+	TextErrorLight  color.Color
+	TextTypedLight  color.Color
+	TextUnypedLight color.Color
 }
 
 var (
 	DefaultTheme = ColorTheme{
-		Primary:    lipgloss.AdaptiveColor{Dark: "#1e1e2e", Light: "#6c7086"},
-		Secondary:  lipgloss.AdaptiveColor{Dark: "#6c7086", Light: "#acb0be"},
-		Accent:     lipgloss.AdaptiveColor{Dark: "#89b4fa", Light: "#1e66f5"},
-		TextError:  lipgloss.AdaptiveColor{Dark: "#dd8888", Light: "#dd8888"},
-		TextTyped:  lipgloss.AdaptiveColor{Dark: "#ffffff", Light: "#000000"},
-		TextUnyped: lipgloss.AdaptiveColor{Dark: "#aaaaaa", Light: "#444444"},
+		Primary:    lipgloss.Color("#1e1e2e"),
+		Secondary:  lipgloss.Color("#6c7086"),
+		Accent:     lipgloss.Color("#89b4fa"),
+		TextError:  lipgloss.Color("#dd8888"),
+		TextTyped:  lipgloss.Color("#ffffff"),
+		TextUnyped: lipgloss.Color("#aaaaaa"),
+
+		PrimaryLight:    lipgloss.Color("#6c7086"),
+		SecondaryLight:  lipgloss.Color("#acb0be"),
+		AccentLight:     lipgloss.Color("#1e66f5"),
+		TextErrorLight:  lipgloss.Color("#dd8888"),
+		TextTypedLight:  lipgloss.Color("#000000"),
+		TextUnypedLight: lipgloss.Color("#444444"),
 	}
 )
 
@@ -41,13 +57,14 @@ var (
 	errorStyle        = lipgloss.NewStyle().Foreground(DefaultTheme.TextError)
 )
 
-func SetCurrentTheme(t ColorTheme) func() tea.Msg {
+func (t ColorTheme) SetCurrentTheme(isDark bool) func() tea.Msg {
+	var lightDark = lipgloss.LightDark(isDark)
 	return func() tea.Msg {
-		inactiveTabStyle = inactiveTabStyle.BorderForeground(t.Accent).Foreground(t.Secondary)
-		activeTabStyle = activeTabStyle.BorderForeground(t.Accent).Foreground(t.Accent)
-		tabGapLeft = tabGapLeft.BorderForeground(t.Accent)
-		tabGapRight = tabGapRight.BorderForeground(t.Accent)
-		windowStyle = windowStyle.BorderForeground(t.Accent)
+		inactiveTabStyle = inactiveTabStyle.BorderForeground(lightDark(t.Accent, t.AccentLight)).Foreground(lightDark(t.Secondary, t.SecondaryLight))
+		activeTabStyle = activeTabStyle.BorderForeground(lightDark(t.Accent, t.AccentLight)).Foreground(lightDark(t.Accent, t.AccentLight))
+		tabGapLeft = tabGapLeft.BorderForeground(lightDark(t.Accent, t.AccentLight))
+		tabGapRight = tabGapRight.BorderForeground(lightDark(t.Accent, t.AccentLight))
+		windowStyle = windowStyle.BorderForeground(lightDark(t.Accent, t.AccentLight))
 		return nil
 	}
 }

@@ -6,8 +6,7 @@ import (
 	// "os"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
-	// "github.com/muesli/termenv"
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 func (m Model) View() string {
@@ -92,8 +91,6 @@ func GetHomeContents(m *Model) string {
 		contents += errorStyle.Render(m.typedErr[min(len(curr_word)-correct_chars, incorrect_chars):]) // Current word - overtyped
 		
 		contents += quoteStyle.Render(m.quote.Quote[m.typedLen:]) // Rest of the quote
-
-		// m.output.MoveCursor(m.cursorRow, m.cursorCol)
 
 	} else if m.quoteCompleted {
 		contents = typedStyle.Render("Completed test!!! :D")
