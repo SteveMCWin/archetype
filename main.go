@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	tea "github.com/charmbracelet/bubbletea/v2"
+	tea "charm.land/bubbletea/v2"
 )
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 	log.Println("~~~~~~~~~PROGRAM START~~~~~~~~~")
 	log.Println()
 
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m)
 	if _, err := p.Run(); err != nil {
 		log.Fatal("Unable to run tui:", err)
 	}

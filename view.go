@@ -3,13 +3,18 @@ package main
 import (
 	"fmt"
 	"log"
+
 	// "os"
 	"strings"
 
+	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-func (m Model) View() string {
+func (m Model) View() tea.View {
+	view := tea.NewView("Haii")
+	view.AltScreen = true
+
 	doc := strings.Builder{}
 
 	var renderedTabs []string
@@ -64,7 +69,8 @@ func (m Model) View() string {
 
 	// doc.WriteString(fmt.Sprintf("\033[%d;%dH", m.cursorRow, m.cursorCol))
 
-	return docStyle.Render(doc.String())
+	// return docStyle.Render(doc.String())
+	return view
 }
 
 func GetHomeContents(m *Model) string {

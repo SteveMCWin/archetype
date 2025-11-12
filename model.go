@@ -13,7 +13,7 @@ import (
 	"time"
 
 	mod "github.com/SteveMCWin/archetype-common/models"
-	tea "github.com/charmbracelet/bubbletea/v2"
+	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
@@ -188,9 +188,9 @@ func (m Model) Init() tea.Cmd {
 	cmds := []tea.Cmd{
 		tea.Sequence(SetTerminal, ChangeFontSize(&m.terminal, 8, true)), // NOTE: Hard coded for testing, the amount should be read from saved user settings
 		m.theme.SetCurrentTheme(true), // NOTE: hard coded for testing
-		tea.SetWindowTitle("Archetype"),
+		// tea.
 		GetQuoteFromServer(mod.QUOTE_SHORT),
-		tea.ShowCursor,
+		// tea.ShowCursor,
 	}
 
 	return tea.Batch(cmds...) // NOTE: set curr theme should be replaced with a function that loads save data and that handles the theme
@@ -235,11 +235,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			if m.currTab == Home {
 				m.isTyping = true
-				cmds = append(cmds, tea.ShowCursor)
+				// cmds = append(cmds, tea.ShowCursor)
 			}
 		case "esc":
 			if m.isTyping {
-				cmds = append(cmds, tea.HideCursor)
+				// cmds = append(cmds, tea.HideCursor)
 				m.isTyping = false
 				// stop the test or something
 			}
