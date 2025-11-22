@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	mod "github.com/SteveMCWin/archetype-common/models"
 	tea "charm.land/bubbletea/v2"
+	mod "github.com/SteveMCWin/archetype-common/models"
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
@@ -84,8 +84,10 @@ type Model struct {
 	startTime      time.Time
 	stats          TestStats
 
-	cursorRow      int
-	cursorCol      int
+	cursor *tea.Cursor
+
+	cursorRow int
+	cursorCol int
 }
 
 func NewModel() Model {
@@ -98,6 +100,7 @@ func NewModel() Model {
 			{TabSymbol: "       ♔     ", TabName: "♔ Leaderboard", Contents: "Leaderboard displayed here"},
 			{TabSymbol: "    ⚇    ", TabName: "⚇ Profile", Contents: "Your profile here hehe"},
 		},
+		cursor:   tea.NewCursor(15, 20),
 		currTab:  Home,
 		theme:    DefaultTheme,
 		isTyping: true,
@@ -187,7 +190,7 @@ func ChangeFontSize(term *SupportedTerminals, amount int, pos bool) tea.Cmd {
 func (m Model) Init() tea.Cmd {
 	cmds := []tea.Cmd{
 		tea.Sequence(SetTerminal, ChangeFontSize(&m.terminal, 8, true)), // NOTE: Hard coded for testing, the amount should be read from saved user settings
-		m.theme.SetCurrentTheme(true), // NOTE: hard coded for testing
+		m.theme.SetCurrentTheme(true),                                   // NOTE: hard coded for testing
 		// tea.
 		GetQuoteFromServer(mod.QUOTE_SHORT),
 		// tea.ShowCursor,
@@ -212,40 +215,43 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds := make([]tea.Cmd, 0)
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		// log.Println("tea.KeyMsg:", msg.String())
-		switch msg.String() {
-		case "ctrl+c":
-			seq := tea.Sequence(ChangeFontSize(&m.terminal, 0, true), tea.Quit)
-			cmds = append(cmds, seq)
-		case "right", "tab":
+		log.Println("tea.KeyMsg:", msg.String())
+		switch key := msg.Key(); key.Code {
+		case tea.KeyRight, tea.KeyTab:
 			if !m.isTyping {
 				m.currTab = TabIndex((int(m.currTab) + 1) % len(m.tabs))
 			}
-		case "left", "shift+tab":
+		case tea.KeyLeft, tea.KeyLeftShift | tea.KeyTab:
 			if !m.isTyping {
 				m.currTab = TabIndex((len(m.tabs) + int(m.currTab) - 1) % len(m.tabs))
 			}
-		case "ctrl+r":
-			ResetTyingData(&m)
-			cmds = append(cmds, GetQuoteFromServer(mod.QUOTE_MEDIUM))
-		case "ctrl+up":
-			cmds = append(cmds, ChangeFontSize(&m.terminal, 1, true))
-		case "ctrl+down":
-			cmds = append(cmds, ChangeFontSize(&m.terminal, 1, false))
-		case "enter":
+		case tea.KeyEnter:
 			if m.currTab == Home {
 				m.isTyping = true
 				// cmds = append(cmds, tea.ShowCursor)
 			}
-		case "esc":
+		case tea.KeyEsc:
 			if m.isTyping {
 				// cmds = append(cmds, tea.HideCursor)
 				m.isTyping = false
 				// stop the test or something
 			}
 		default:
-			if m.isTyping {
-				HandleTyping(&m, msg.String())
+			switch msg.String() {
+			case "ctrl+c":
+				seq := tea.Sequence(ChangeFontSize(&m.terminal, 0, true), tea.Quit)
+				cmds = append(cmds, seq)
+			case "ctrl+r":
+				ResetTyingData(&m)
+				cmds = append(cmds, GetQuoteFromServer(mod.QUOTE_MEDIUM))
+			case "ctrl+up":
+				cmds = append(cmds, ChangeFontSize(&m.terminal, 1, true))
+			case "ctrl+down":
+				cmds = append(cmds, ChangeFontSize(&m.terminal, 1, false))
+			default:
+				if m.isTyping {
+					HandleTyping(&m, msg.String())
+				}
 			}
 		}
 	case HttpStatus:
@@ -294,11 +300,11 @@ func HandleTyping(m *Model, key string) {
 		m.cursorCol -= 1
 
 	// this is actually ctrl+backspace
-	case "ctrl+h":
+	case "ctrl+backspace":
 		m.typedErr = ""
 		m.typedWord = ""
 
-	case " ":
+	case "space":
 		if m.typedWord != m.splitQuote[m.wordsTyped] || m.typedErr != "" {
 			// NOTE: prevents starting a word with space, should make modular depending on settings
 			if len(m.typedWord) > 0 {

@@ -51,7 +51,7 @@ var (
 	activeTabStyle    = inactiveTabStyle.Border(activeTabBorder, true)
 	tabGapLeft        = inactiveTabStyle.Border(tabGapBorderLeft, true)
 	tabGapRight       = inactiveTabStyle.Border(tabGapBorderRight, true)
-	windowStyle       = lipgloss.NewStyle().Padding(2).Align(lipgloss.Left, lipgloss.Center).Border(lipgloss.RoundedBorder()).UnsetBorderTop()
+	windowStyle       = lipgloss.NewStyle().Padding(2).Align(lipgloss.Center).Border(lipgloss.RoundedBorder()).UnsetBorderTop()
 	quoteStyle        = lipgloss.NewStyle().Foreground(DefaultTheme.TextUnyped)
 	typedStyle        = lipgloss.NewStyle().Foreground(DefaultTheme.TextTyped)
 	errorStyle        = lipgloss.NewStyle().Foreground(DefaultTheme.TextError)

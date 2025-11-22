@@ -12,8 +12,6 @@ import (
 )
 
 func (m Model) View() tea.View {
-	view := tea.NewView("Haii")
-	view.AltScreen = true
 
 	doc := strings.Builder{}
 
@@ -62,7 +60,7 @@ func (m Model) View() tea.View {
 	default:
 	}
 
-	_, err := doc.WriteString(windowStyle.Width(m.windowWidth - windowStyle.GetHorizontalFrameSize()).Height(m.windowHeight-windowStyle.GetVerticalFrameSize()).Render(contents))
+	_, err := doc.WriteString(windowStyle.Width(m.windowWidth - windowStyle.GetHorizontalFrameSize()+2).Height(m.windowHeight-windowStyle.GetVerticalFrameSize()).Render(contents))
 	if err != nil {
 		log.Println("Error displaying window and contents:", err)
 	}
@@ -70,6 +68,9 @@ func (m Model) View() tea.View {
 	// doc.WriteString(fmt.Sprintf("\033[%d;%dH", m.cursorRow, m.cursorCol))
 
 	// return docStyle.Render(doc.String())
+
+	view := tea.NewView(docStyle.Render(doc.String()))
+	view.AltScreen = true
 	return view
 }
 
