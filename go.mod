@@ -5,14 +5,14 @@ go 1.24.6
 require (
 	charm.land/bubbletea/v2 v2.0.0-rc.1
 	github.com/SteveMCWin/archetype-common v0.0.0-20250912031738-3475c532ea51
-	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta.2
+	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta.3
 )
 
 require (
 	github.com/charmbracelet/colorprofile v0.3.2 // indirect
 	github.com/charmbracelet/ultraviolet v0.0.0-20251104185819-20e68c88fe84 // indirect
 	github.com/charmbracelet/x/ansi v0.10.3 // indirect
-	github.com/charmbracelet/x/cellbuf v0.0.14-0.20250505150409-97991a1f17d1 // indirect
+	github.com/charmbracelet/x/cellbuf v0.0.13 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.2.2 // indirect

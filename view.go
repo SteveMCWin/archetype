@@ -60,29 +60,46 @@ func (m Model) View() tea.View {
 	default:
 	}
 
+	log.Println("windowStyle width: ", windowStyle.GetHorizontalFrameSize())
+	log.Println("docStyle width: ", docStyle.GetHorizontalFrameSize())
+	log.Println("contentTyle width: ", contentStyle.GetHorizontalFrameSize())
+
 	_, err := doc.WriteString(windowStyle.Width(m.windowWidth - windowStyle.GetHorizontalFrameSize()+2).Height(m.windowHeight-windowStyle.GetVerticalFrameSize()).Render(contents))
 	if err != nil {
 		log.Println("Error displaying window and contents:", err)
 	}
 
-	// doc.WriteString(fmt.Sprintf("\033[%d;%dH", m.cursorRow, m.cursorCol))
+	whole_string := docStyle.Render(doc.String())
+	if len(m.splitQuote) > 0 {
+		position := strings.Index(whole_string, m.splitQuote[0])
+		log.Println("Position 1D: ", position)
+		log.Println("Position 2D: ", position%m.windowWidth, " ", position/m.windowWidth)
+	}
 
-	// return docStyle.Render(doc.String())
-
-	view := tea.NewView(docStyle.Render(doc.String()))
+	view := tea.NewView(whole_string)
+	view.Cursor = m.cursor
 	view.AltScreen = true
 	return view
 }
 
 func GetHomeContents(m *Model) string {
 
+	// There are two problems: 
+	//  - We have to determine the starting position of the text
+	//  - We have to determine when the cursor is supposed to go to the next row of text
+	// 
+	// Ok so the idea is to split the quote into rows, where each row ends with a newline character and then display it as that.
+	// Since the text is aligned to the left, the X coordinate of the start of each row is the same
+	// So once the startX + currX of the cursor are greater than the length of the text in currRow, set the cursors currX to startX and increment currY
+	// I've tried searching the result string that gets rendered to the terminal to get the index of the first word and position the cursor there,
+	// but the result string has a bunch of characters that aren't visible and are for style, so it's way off. The only other solution I could
+	// think of is to just calculate the position based on the style margins and paddings, which does work for the startX, but the startY is currenlty
+	// variable because of the alignment of the content style. This means I will have to handle the alignment myself by calculating the vertical padding
+	// for the content based on the window height.
+
 	contents := ""
 
 	if m.quoteLoaded && !m.quoteCompleted {
-
-		// output.CursorForward(1)
-		// output.AltScreen()
-		// output.MoveCursor(m.cursorRow, m.cursorCol)
 
 		curr_word := m.splitQuote[m.wordsTyped]
 
@@ -106,8 +123,7 @@ func GetHomeContents(m *Model) string {
 		contents += typedStyle.Render(stats_str)
 	}
 
-	contentStyle := lipgloss.NewStyle().Padding(0, 12).Width(m.windowWidth-windowStyle.GetHorizontalFrameSize()).Align(lipgloss.Left, lipgloss.Center)
-	contents = contentStyle.Render(contents)
+	contents = contentStyle.Width(m.windowWidth-windowStyle.GetHorizontalFrameSize()).Render(contents)
 
 	return contents
 }

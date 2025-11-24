@@ -46,15 +46,17 @@ var (
 	activeTabBorder   = lipgloss.Border{Top: "─", Bottom: " ", Left: "│", Right: "│", TopLeft: "╭", TopRight: "╮", BottomLeft: "┘", BottomRight: "└"}
 	tabGapBorderLeft  = lipgloss.Border{Bottom: "─", BottomLeft: "╭", BottomRight: "─"}
 	tabGapBorderRight = lipgloss.Border{Bottom: "─", BottomLeft: "─", BottomRight: "╮"}
+
 	docStyle          = lipgloss.NewStyle().Padding(1, 2).Align(lipgloss.Center)
 	inactiveTabStyle  = lipgloss.NewStyle().Border(inactiveTabBorder, true).Padding(0, 1)
 	activeTabStyle    = inactiveTabStyle.Border(activeTabBorder, true)
 	tabGapLeft        = inactiveTabStyle.Border(tabGapBorderLeft, true)
 	tabGapRight       = inactiveTabStyle.Border(tabGapBorderRight, true)
-	windowStyle       = lipgloss.NewStyle().Padding(2).Align(lipgloss.Center).Border(lipgloss.RoundedBorder()).UnsetBorderTop()
+	windowStyle       = lipgloss.NewStyle().Padding(2).Align(lipgloss.Left, lipgloss.Center).Border(lipgloss.RoundedBorder()).UnsetBorderTop()
 	quoteStyle        = lipgloss.NewStyle().Foreground(DefaultTheme.TextUnyped)
 	typedStyle        = lipgloss.NewStyle().Foreground(DefaultTheme.TextTyped)
 	errorStyle        = lipgloss.NewStyle().Foreground(DefaultTheme.TextError)
+	contentStyle      = lipgloss.NewStyle().Padding(0, 8).Align(lipgloss.Left, lipgloss.Center)
 )
 
 func (t ColorTheme) SetCurrentTheme(isDark bool) func() tea.Msg {

@@ -100,7 +100,7 @@ func NewModel() Model {
 			{TabSymbol: "       ♔     ", TabName: "♔ Leaderboard", Contents: "Leaderboard displayed here"},
 			{TabSymbol: "    ⚇    ", TabName: "⚇ Profile", Contents: "Your profile here hehe"},
 		},
-		cursor:   tea.NewCursor(15, 20),
+		cursor:   tea.NewCursor(42, 111),
 		currTab:  Home,
 		theme:    DefaultTheme,
 		isTyping: true,
@@ -264,13 +264,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.windowWidth = msg.Width
 		m.windowHeight = msg.Height
 	case mod.Quote:
-		m.cursorCol = 5
-		m.cursorRow = 20
+		m.cursor.X = 13
+		m.cursor.Y = 10
 		m.quoteLoaded = true
 		m.quote = msg
 		m.splitQuote = strings.Split(m.quote.Quote, " ")
 		m.typedLen = len(m.splitQuote[m.wordsTyped])
-		m.tabs[Home].Contents = m.quote.Quote
+		// m.tabs[Home].Contents = m.quote.Quote
 	case SupportedTerminals:
 		m.terminal = msg
 	}
@@ -294,10 +294,10 @@ func HandleTyping(m *Model, key string) {
 	case "backspace":
 		if m.typedErr != "" {
 			m.typedErr = m.typedErr[:max(len(m.typedErr)-1, 0)]
+			m.cursor.X -= 1
 		} else {
 			m.typedWord = m.typedWord[:max(len(m.typedWord)-1, 0)]
 		}
-		m.cursorCol -= 1
 
 	// this is actually ctrl+backspace
 	case "ctrl+backspace":
@@ -316,7 +316,7 @@ func HandleTyping(m *Model, key string) {
 		m.typedLen += len(m.splitQuote[m.wordsTyped]) + 1
 		m.typedQuote += m.typedWord + " "
 		m.typedWord = ""
-		m.cursorCol += 1
+		m.cursor.X += 1
 
 	default:
 		if m.typedErr != "" || key != m.splitQuote[m.wordsTyped][len(m.typedWord):min(len(m.typedWord)+1, len(m.splitQuote[m.wordsTyped]))] {
@@ -325,7 +325,7 @@ func HandleTyping(m *Model, key string) {
 			return
 		}
 		m.typedWord += key
-		m.cursorCol += 1
+		m.cursor.X += 1
 
 		if m.wordsTyped+1 == len(m.splitQuote) && m.typedWord == m.splitQuote[m.wordsTyped] {
 			m.quoteCompleted = true
