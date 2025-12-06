@@ -56,7 +56,7 @@ var (
 	quoteStyle        = lipgloss.NewStyle().Foreground(DefaultTheme.TextUnyped)
 	typedStyle        = lipgloss.NewStyle().Foreground(DefaultTheme.TextTyped)
 	errorStyle        = lipgloss.NewStyle().Foreground(DefaultTheme.TextError)
-	contentStyle      = lipgloss.NewStyle().Padding(0, 8).Align(lipgloss.Left, lipgloss.Center)
+	contentStyle      = lipgloss.NewStyle().Padding(0, 8)
 )
 
 func (t ColorTheme) SetCurrentTheme(isDark bool) func() tea.Msg {

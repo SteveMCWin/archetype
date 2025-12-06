@@ -62,7 +62,13 @@ func (m Model) View() tea.View {
 
 	log.Println("windowStyle width: ", windowStyle.GetHorizontalFrameSize())
 	log.Println("docStyle width: ", docStyle.GetHorizontalFrameSize())
-	log.Println("contentTyle width: ", contentStyle.GetHorizontalFrameSize())
+	log.Println("contentStyle width: ", contentStyle.GetHorizontalFrameSize())
+	log.Println()
+	log.Println("windowStyle height: ", windowStyle.GetVerticalFrameSize())
+	log.Println("docStyle height: ", docStyle.GetVerticalFrameSize())
+	log.Println("contentStyle height: ", contentStyle.GetVerticalFrameSize())
+	log.Println("tabStyle height: ", activeTabStyle.GetVerticalFrameSize())
+	log.Println()
 
 	_, err := doc.WriteString(windowStyle.Width(m.windowWidth - windowStyle.GetHorizontalFrameSize()+2).Height(m.windowHeight-windowStyle.GetVerticalFrameSize()).Render(contents))
 	if err != nil {
@@ -70,11 +76,6 @@ func (m Model) View() tea.View {
 	}
 
 	whole_string := docStyle.Render(doc.String())
-	if len(m.splitQuote) > 0 {
-		position := strings.Index(whole_string, m.splitQuote[0])
-		log.Println("Position 1D: ", position)
-		log.Println("Position 2D: ", position%m.windowWidth, " ", position/m.windowWidth)
-	}
 
 	view := tea.NewView(whole_string)
 	view.Cursor = m.cursor
@@ -96,6 +97,20 @@ func GetHomeContents(m *Model) string {
 	// think of is to just calculate the position based on the style margins and paddings, which does work for the startX, but the startY is currenlty
 	// variable because of the alignment of the content style. This means I will have to handle the alignment myself by calculating the vertical padding
 	// for the content based on the window height.
+
+	// Ok so to get the startX, we just divide all style.GetHorizontalFrameSize with 2 and add them together
+	// For the startY however, it's a different story. Calculating the offest from the top we sum the following:
+	// (windowStyle-1)/2   we subtract 1 because the top part of the border is unset, so it's not counted in the GetVerticalFrameSize
+	// tabStyle+1   we add 1 because the getVerticalFrameSize returns only the space taken up by padding, margins and borders, not the content
+	// docStyle/2   the only 'normal' part of the sum
+	//
+	// To get the bottom offset we add the following:
+	// (windowStyle+1)/2   now we add 1 because there is a border on the bottom
+	// docStyle/2   same as the top part
+	// 
+	// Note that we don't add the tab offset, because the tabs are at the top of the screen
+	// Now we need to subtract both of the results from the terminal height and we get the height our working area
+	// The last part is probably to just divide that by 2, but I'll trial and error that since I don't know how the alignment works exactly
 
 	contents := ""
 

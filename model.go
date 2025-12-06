@@ -85,6 +85,8 @@ type Model struct {
 	stats          TestStats
 
 	cursor *tea.Cursor
+	cStartX int
+	cStartY int
 
 	cursorRow int
 	cursorCol int
@@ -261,11 +263,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case HttpError:
 		log.Println("ERROR:", msg)
 	case tea.WindowSizeMsg:
+		log.Println("Terminal width:", msg.Width)
+		log.Println("Terminal height:", msg.Height)
 		m.windowWidth = msg.Width
 		m.windowHeight = msg.Height
 	case mod.Quote:
 		m.cursor.X = 13
-		m.cursor.Y = 10
+		m.cursor.Y = 12
 		m.quoteLoaded = true
 		m.quote = msg
 		m.splitQuote = strings.Split(m.quote.Quote, " ")
