@@ -76,6 +76,7 @@ type Model struct {
 	numErr         int
 	typedQuote     string
 	splitQuote     []string
+	quoteLines     []string
 	typedLen       int
 	wordsTyped     int
 	quoteCompleted bool
@@ -83,10 +84,13 @@ type Model struct {
 	testBegan      bool
 	startTime      time.Time
 	stats          TestStats
+	linesToShow    int
 
-	cursor *tea.Cursor
+	cursor  *tea.Cursor
 	cStartX int
 	cStartY int
+	cMaxX int
+	cRowEnds []int
 
 	cursorRow int
 	cursorCol int
@@ -102,7 +106,7 @@ func NewModel() Model {
 			{TabSymbol: "       ♔     ", TabName: "♔ Leaderboard", Contents: "Leaderboard displayed here"},
 			{TabSymbol: "    ⚇    ", TabName: "⚇ Profile", Contents: "Your profile here hehe"},
 		},
-		cursor:   tea.NewCursor(42, 111),
+		cursor:   tea.NewCursor(0, 0),
 		currTab:  Home,
 		theme:    DefaultTheme,
 		isTyping: true,
@@ -193,9 +197,7 @@ func (m Model) Init() tea.Cmd {
 	cmds := []tea.Cmd{
 		tea.Sequence(SetTerminal, ChangeFontSize(&m.terminal, 8, true)), // NOTE: Hard coded for testing, the amount should be read from saved user settings
 		m.theme.SetCurrentTheme(true),                                   // NOTE: hard coded for testing
-		// tea.
-		GetQuoteFromServer(mod.QUOTE_SHORT),
-		// tea.ShowCursor,
+		GetQuoteFromServer(mod.QUOTE_MEDIUM),
 	}
 
 	return tea.Batch(cmds...) // NOTE: set curr theme should be replaced with a function that loads save data and that handles the theme
@@ -267,6 +269,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		log.Println("Terminal height:", msg.Height)
 		m.windowWidth = msg.Width
 		m.windowHeight = msg.Height
+		m.UpdateCursorStartPos()
 	case mod.Quote:
 		m.cursor.X = 13
 		m.cursor.Y = 12
@@ -274,12 +277,36 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.quote = msg
 		m.splitQuote = strings.Split(m.quote.Quote, " ")
 		m.typedLen = len(m.splitQuote[m.wordsTyped])
-		// m.tabs[Home].Contents = m.quote.Quote
+		m.CalcCRowEnds()
 	case SupportedTerminals:
 		m.terminal = msg
 	}
 
 	return m, tea.Batch(cmds...)
+}
+
+func (m *Model) UpdateCursorStartPos() {
+	m.cStartX = (windowStyle.GetHorizontalFrameSize() + docStyle.GetHorizontalFrameSize() + contentStyle.GetHorizontalFrameSize()) / 2
+	top_offset := (windowStyle.GetVerticalFrameSize()-1)/2 + activeTabStyle.GetVerticalFrameSize()+1 + docStyle.GetVerticalFrameSize()/2
+	bot_offset := (windowStyle.GetVerticalFrameSize()+1)/2 + docStyle.GetVerticalFrameSize()/2
+
+	working_space := (m.windowHeight - top_offset - bot_offset)
+	m.cStartY = working_space  / 2 - (m.linesToShow-2) // prolly will need to be fixed, doesn't really mimic monkeytype the way I wanted it to
+
+	m.cMaxX = m.windowWidth - m.cStartX
+}
+
+func (m *Model) CalcCRowEnds() {
+	m.cRowEnds = []int{}
+
+	counter := 0
+	for i, w := range m.splitQuote {
+		if counter + len(w) > m.cMaxX {
+			m.cRowEnds = append(m.cRowEnds, i)
+			counter = 0
+		}
+		counter += len(w) + 1 // the +1 is for the space
+	}
 }
 
 func HandleTyping(m *Model, key string) {
@@ -316,11 +343,17 @@ func HandleTyping(m *Model, key string) {
 			}
 			return
 		}
-		m.wordsTyped++
 		m.typedLen += len(m.splitQuote[m.wordsTyped]) + 1
 		m.typedQuote += m.typedWord + " "
 		m.typedWord = ""
-		m.cursor.X += 1
+
+		m.wordsTyped++
+		if m.wordsTyped == m.cRowEnds[0] {
+			m.cursor.X = m.cStartX
+			m.cRowEnds = m.cRowEnds[1:]
+		} else {
+			m.cursor.X += 1
+		}
 
 	default:
 		if m.typedErr != "" || key != m.splitQuote[m.wordsTyped][len(m.typedWord):min(len(m.typedWord)+1, len(m.splitQuote[m.wordsTyped]))] {
