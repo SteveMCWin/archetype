@@ -137,10 +137,6 @@ func GetHomeContents(m *Model) string {
 		curr_word_lens_combined := len(correctly_typed + incorrectly_typed + yet_to_type + overtyped)
 
 		contents += quoteStyle.Render(m.quote.Quote[m.typedLen + curr_word_lens_combined :]) // Rest of the quote
-		log.Println("Rest of quote :::", m.quote.Quote[m.typedLen + curr_word_lens_combined :])
-		log.Println("Len of curr word :::", m.typedLen + curr_word_lens_combined)
-		log.Println("Typed len :::", m.typedLen)
-		log.Println("Lens combined :::", curr_word_lens_combined)
 
 	} else if m.quoteCompleted {
 		contents = typedStyle.Render("Completed test!!! :D")

@@ -275,6 +275,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case mod.Quote:
 		m.cursor.X = m.cStartX
 		m.cursor.Y = m.cStartY
+		log.Println("startX:", m.cStartX)
+		log.Println("startY:", m.cStartY)
 		m.quoteLoaded = true
 		m.quote = msg
 		m.splitQuote = strings.Split(m.quote.Quote, " ")
@@ -292,8 +294,12 @@ func (m *Model) UpdateCursorStartPos() {
 	top_offset := (windowStyle.GetVerticalFrameSize()-1)/2 + activeTabStyle.GetVerticalFrameSize()+1 + docStyle.GetVerticalFrameSize()/2
 	bot_offset := (windowStyle.GetVerticalFrameSize()+1)/2 + docStyle.GetVerticalFrameSize()/2
 
+	log.Println("top_offset:", top_offset)
+	log.Println("bot_offset:", bot_offset)
+
+	// working_space := (m.windowHeight - top_offset - bot_offset)
 	working_space := (m.windowHeight - top_offset - bot_offset)
-	m.cStartY = working_space  / 2 - (m.linesToShow-2) // prolly will need to be fixed, doesn't really mimic monkeytype the way I wanted it to
+	m.cStartY = working_space  / 2 + top_offset - (m.linesToShow-2) // prolly will need to be fixed, doesn't really mimic monkeytype the way I wanted it to
 
 	m.cMaxX = m.windowWidth - 2 * m.cStartX + 1
 }
