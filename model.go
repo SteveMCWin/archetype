@@ -110,6 +110,7 @@ func NewModel() Model {
 		currTab:  Home,
 		theme:    DefaultTheme,
 		isTyping: true,
+		linesToShow: 3,
 	}
 }
 
@@ -219,7 +220,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds := make([]tea.Cmd, 0)
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		log.Println("tea.KeyMsg:", msg.String())
+		// log.Println("tea.KeyMsg:", msg.String())
 		switch key := msg.Key(); key.Code {
 		case tea.KeyRight, tea.KeyTab:
 			if !m.isTyping {
@@ -270,13 +271,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.windowWidth = msg.Width
 		m.windowHeight = msg.Height
 		m.UpdateCursorStartPos()
+		m.CalcCRowEnds()
 	case mod.Quote:
-		m.cursor.X = 13
-		m.cursor.Y = 12
+		m.cursor.X = m.cStartX
+		m.cursor.Y = m.cStartY
 		m.quoteLoaded = true
 		m.quote = msg
 		m.splitQuote = strings.Split(m.quote.Quote, " ")
-		m.typedLen = len(m.splitQuote[m.wordsTyped])
+		m.typedLen = 0
 		m.CalcCRowEnds()
 	case SupportedTerminals:
 		m.terminal = msg
@@ -293,7 +295,7 @@ func (m *Model) UpdateCursorStartPos() {
 	working_space := (m.windowHeight - top_offset - bot_offset)
 	m.cStartY = working_space  / 2 - (m.linesToShow-2) // prolly will need to be fixed, doesn't really mimic monkeytype the way I wanted it to
 
-	m.cMaxX = m.windowWidth - m.cStartX
+	m.cMaxX = m.windowWidth - 2 * m.cStartX + 1
 }
 
 func (m *Model) CalcCRowEnds() {
@@ -307,6 +309,9 @@ func (m *Model) CalcCRowEnds() {
 		}
 		counter += len(w) + 1 // the +1 is for the space
 	}
+	m.cRowEnds = append(m.cRowEnds, 999) // the last row typed shouldn't trigger the cursor to go into the new line
+
+	log.Println("CRowEnds:", m.cRowEnds)
 }
 
 func HandleTyping(m *Model, key string) {
@@ -328,6 +333,7 @@ func HandleTyping(m *Model, key string) {
 			m.cursor.X -= 1
 		} else {
 			m.typedWord = m.typedWord[:max(len(m.typedWord)-1, 0)]
+			// fix cursor pos here
 		}
 
 	// this is actually ctrl+backspace
@@ -341,7 +347,7 @@ func HandleTyping(m *Model, key string) {
 			if len(m.typedWord) > 0 {
 				m.typedErr += " "
 			}
-			return
+			break
 		}
 		m.typedLen += len(m.splitQuote[m.wordsTyped]) + 1
 		m.typedQuote += m.typedWord + " "
@@ -356,13 +362,14 @@ func HandleTyping(m *Model, key string) {
 		}
 
 	default:
+		m.cursor.X += 1
+
 		if m.typedErr != "" || key != m.splitQuote[m.wordsTyped][len(m.typedWord):min(len(m.typedWord)+1, len(m.splitQuote[m.wordsTyped]))] {
 			m.numErr++
 			m.typedErr += key
-			return
+			break
 		}
 		m.typedWord += key
-		m.cursor.X += 1
 
 		if m.wordsTyped+1 == len(m.splitQuote) && m.typedWord == m.splitQuote[m.wordsTyped] {
 			m.quoteCompleted = true
@@ -371,6 +378,8 @@ func HandleTyping(m *Model, key string) {
 		}
 	}
 
+	log.Println("currWord", m.splitQuote[m.wordsTyped])
+	log.Println("typedWord", m.typedWord)
 }
 
 func SetStats(m *Model) {

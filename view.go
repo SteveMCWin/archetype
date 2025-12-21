@@ -60,15 +60,15 @@ func (m Model) View() tea.View {
 	default:
 	}
 
-	log.Println("windowStyle width: ", windowStyle.GetHorizontalFrameSize())
-	log.Println("docStyle width: ", docStyle.GetHorizontalFrameSize())
-	log.Println("contentStyle width: ", contentStyle.GetHorizontalFrameSize())
-	log.Println()
-	log.Println("windowStyle height: ", windowStyle.GetVerticalFrameSize())
-	log.Println("docStyle height: ", docStyle.GetVerticalFrameSize())
-	log.Println("contentStyle height: ", contentStyle.GetVerticalFrameSize())
-	log.Println("tabStyle height: ", activeTabStyle.GetVerticalFrameSize())
-	log.Println()
+	// log.Println("windowStyle width: ", windowStyle.GetHorizontalFrameSize())
+	// log.Println("docStyle width: ", docStyle.GetHorizontalFrameSize())
+	// log.Println("contentStyle width: ", contentStyle.GetHorizontalFrameSize())
+	// log.Println()
+	// log.Println("windowStyle height: ", windowStyle.GetVerticalFrameSize())
+	// log.Println("docStyle height: ", docStyle.GetVerticalFrameSize())
+	// log.Println("contentStyle height: ", contentStyle.GetVerticalFrameSize())
+	// log.Println("tabStyle height: ", activeTabStyle.GetVerticalFrameSize())
+	// log.Println()
 
 	_, err := doc.WriteString(windowStyle.Width(m.windowWidth - windowStyle.GetHorizontalFrameSize()+2).Height(m.windowHeight-windowStyle.GetVerticalFrameSize()).Render(contents))
 	if err != nil {
@@ -124,12 +124,23 @@ func GetHomeContents(m *Model) string {
 
 		contents = typedStyle.Render(m.typedQuote) // Already typed words
 
-		contents += typedStyle.Render(curr_word[:min(correct_chars, len(curr_word))]) // Current word - typed correctly
-		contents += errorStyle.Render(curr_word[min(correct_chars, len(curr_word)):min(typed_chars, len(curr_word))]) // Current word - typed incorrectly
-		contents += quoteStyle.Render(curr_word[min(typed_chars, len(curr_word)):]) // Current word - untyped
-		contents += errorStyle.Render(m.typedErr[min(len(curr_word)-correct_chars, incorrect_chars):]) // Current word - overtyped
+		correctly_typed := curr_word[:min(correct_chars, len(curr_word))]
+		incorrectly_typed := curr_word[min(correct_chars, len(curr_word)):min(typed_chars, len(curr_word))]
+		yet_to_type := curr_word[min(typed_chars, len(curr_word)):]
+		overtyped := m.typedErr[min(len(curr_word)-correct_chars, incorrect_chars):]
+
+		contents += typedStyle.Render(correctly_typed) // Current word - typed correctly
+		contents += errorStyle.Render(incorrectly_typed) // Current word - typed incorrectly
+		contents += quoteStyle.Render(yet_to_type) // Current word - untyped
+		contents += errorStyle.Render(overtyped) // Current word - overtyped
 		
-		contents += quoteStyle.Render(m.quote.Quote[m.typedLen:]) // Rest of the quote
+		curr_word_lens_combined := len(correctly_typed + incorrectly_typed + yet_to_type + overtyped)
+
+		contents += quoteStyle.Render(m.quote.Quote[m.typedLen + curr_word_lens_combined :]) // Rest of the quote
+		log.Println("Rest of quote :::", m.quote.Quote[m.typedLen + curr_word_lens_combined :])
+		log.Println("Len of curr word :::", m.typedLen + curr_word_lens_combined)
+		log.Println("Typed len :::", m.typedLen)
+		log.Println("Lens combined :::", curr_word_lens_combined)
 
 	} else if m.quoteCompleted {
 		contents = typedStyle.Render("Completed test!!! :D")
