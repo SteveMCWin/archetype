@@ -118,17 +118,23 @@ func GetHomeContents(m *Model) string {
 
 		curr_word := m.splitQuote[m.wordsTyped]
 
+		// contents = typedStyle.Render(m.typedQuote) // Already typed words
+		lines := ""
+		for i := m.currLine-m.linesToShow/2; i < m.currLine; i++ {
+			lines += m.quoteLines[i] + "\n"
+		}
+		contents = typedStyle.Render(lines) // Already typed lines
+
 		correct_chars := len(m.typedWord)
 		incorrect_chars := len(m.typedErr)
 		typed_chars := correct_chars + incorrect_chars
-
-		contents = typedStyle.Render(m.typedQuote) // Already typed words
 
 		correctly_typed := curr_word[:min(correct_chars, len(curr_word))]
 		incorrectly_typed := curr_word[min(correct_chars, len(curr_word)):min(typed_chars, len(curr_word))]
 		yet_to_type := curr_word[min(typed_chars, len(curr_word)):]
 		overtyped := m.typedErr[min(len(curr_word)-correct_chars, incorrect_chars):]
 
+		contents += typedStyle.Render(m.quoteLines[m.currLine][:m.typedLen]) // Current line - typed correctly up to current word
 		contents += typedStyle.Render(correctly_typed) // Current word - typed correctly
 		contents += errorStyle.Render(incorrectly_typed) // Current word - typed incorrectly
 		contents += quoteStyle.Render(yet_to_type) // Current word - untyped
@@ -136,7 +142,14 @@ func GetHomeContents(m *Model) string {
 		
 		curr_word_lens_combined := len(correctly_typed + incorrectly_typed + yet_to_type + overtyped)
 
-		contents += quoteStyle.Render(m.quote.Quote[m.typedLen + curr_word_lens_combined :]) // Rest of the quote
+		// contents += quoteStyle.Render(m.quote.Quote[m.typedLen + curr_word_lens_combined :]) // Rest of the current line
+		contents += quoteStyle.Render(m.quoteLines[m.currLine][m.typedLen + curr_word_lens_combined :]) // Rest of the current line
+
+		lines = "\n"
+		for i := m.currLine+1; i <= m.currLine+m.linesToShow/2 && i < len(m.quoteLines); i++ {
+			lines += m.quoteLines[i] + "\n"
+		}
+		contents += quoteStyle.Render(lines)
 
 	} else if m.quoteCompleted {
 		contents = typedStyle.Render("Completed test!!! :D")

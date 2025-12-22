@@ -85,11 +85,12 @@ type Model struct {
 	startTime      time.Time
 	stats          TestStats
 	linesToShow    int
+	currLine       int
 
-	cursor  *tea.Cursor
-	cStartX int
-	cStartY int
-	cMaxX int
+	cursor   *tea.Cursor
+	cStartX  int
+	cStartY  int
+	cMaxX    int
 	cRowEnds []int
 
 	cursorRow int
@@ -97,6 +98,8 @@ type Model struct {
 }
 
 func NewModel() Model {
+
+	lts := 3
 
 	return Model{
 		tabs: []Tab{ // WARNING: the tabs must be made in the same order as TabIndex definitions. A fix for this would be to make the tabs field a map
@@ -106,11 +109,12 @@ func NewModel() Model {
 			{TabSymbol: "       ♔     ", TabName: "♔ Leaderboard", Contents: "Leaderboard displayed here"},
 			{TabSymbol: "    ⚇    ", TabName: "⚇ Profile", Contents: "Your profile here hehe"},
 		},
-		cursor:   tea.NewCursor(0, 0),
-		currTab:  Home,
-		theme:    DefaultTheme,
-		isTyping: true,
-		linesToShow: 3,
+		cursor:      tea.NewCursor(0, 0),
+		currTab:     Home,
+		theme:       DefaultTheme,
+		isTyping:    true,
+		linesToShow: lts,
+		currLine: lts/2,
 	}
 }
 
@@ -205,6 +209,7 @@ func (m Model) Init() tea.Cmd {
 }
 
 func ResetTyingData(m *Model) {
+	m.currLine = m.linesToShow/2
 	m.numErr = 0
 	m.testBegan = false
 	m.typedErr = ""
@@ -220,7 +225,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds := make([]tea.Cmd, 0)
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		// log.Println("tea.KeyMsg:", msg.String())
 		switch key := msg.Key(); key.Code {
 		case tea.KeyRight, tea.KeyTab:
 			if !m.isTyping {
@@ -291,7 +295,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *Model) UpdateCursorStartPos() {
 	m.cStartX = (windowStyle.GetHorizontalFrameSize() + docStyle.GetHorizontalFrameSize() + contentStyle.GetHorizontalFrameSize()) / 2
-	top_offset := (windowStyle.GetVerticalFrameSize()-1)/2 + activeTabStyle.GetVerticalFrameSize()+1 + docStyle.GetVerticalFrameSize()/2
+	top_offset := (windowStyle.GetVerticalFrameSize()-1)/2 + activeTabStyle.GetVerticalFrameSize() + 1 + docStyle.GetVerticalFrameSize()/2
 	bot_offset := (windowStyle.GetVerticalFrameSize()+1)/2 + docStyle.GetVerticalFrameSize()/2
 
 	log.Println("top_offset:", top_offset)
@@ -299,25 +303,37 @@ func (m *Model) UpdateCursorStartPos() {
 
 	// working_space := (m.windowHeight - top_offset - bot_offset)
 	working_space := (m.windowHeight - top_offset - bot_offset)
-	m.cStartY = working_space  / 2 + top_offset - (m.linesToShow-2) // prolly will need to be fixed, doesn't really mimic monkeytype the way I wanted it to
+	m.cStartY = working_space/2 + top_offset - (m.linesToShow - 2) // prolly will need to be fixed, doesn't really mimic monkeytype the way I wanted it to
 
-	m.cMaxX = m.windowWidth - 2 * m.cStartX + 1
+	// NOTE: not really correct at the moment because bubbletea doesn't center the text properly
+	// but will probably be fine if I split the quote into rows myself since I'll be splitting it using the same criteria
+	m.cMaxX = m.windowWidth - 2*m.cStartX + 1
 }
 
 func (m *Model) CalcCRowEnds() {
 	m.cRowEnds = []int{}
+	m.quoteLines = []string{}
 
+	for range m.linesToShow/2 {
+		m.quoteLines = append(m.quoteLines, "")
+	}
+
+	line_start := 0
 	counter := 0
 	for i, w := range m.splitQuote {
-		if counter + len(w) > m.cMaxX {
+		if counter+len(w) > m.cMaxX {
 			m.cRowEnds = append(m.cRowEnds, i)
+			m.quoteLines = append(m.quoteLines, m.quote.Quote[line_start:line_start+counter])
+			line_start += counter
 			counter = 0
 		}
 		counter += len(w) + 1 // the +1 is for the space
 	}
+	m.quoteLines = append(m.quoteLines, m.quote.Quote[line_start:])
 	m.cRowEnds = append(m.cRowEnds, 999) // the last row typed shouldn't trigger the cursor to go into the new line
-
-	log.Println("CRowEnds:", m.cRowEnds)
+	for i := range m.quoteLines {
+		log.Println("Line", i, ":", m.quoteLines[i])
+	}
 }
 
 func HandleTyping(m *Model, key string) {
@@ -363,6 +379,8 @@ func HandleTyping(m *Model, key string) {
 		if m.wordsTyped == m.cRowEnds[0] {
 			m.cursor.X = m.cStartX
 			m.cRowEnds = m.cRowEnds[1:]
+			m.currLine += 1
+			m.typedLen = 0
 		} else {
 			m.cursor.X += 1
 		}
