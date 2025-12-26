@@ -209,7 +209,7 @@ func (m Model) Init() tea.Cmd {
 }
 
 func ResetTyingData(m *Model) {
-	m.currLine = m.linesToShow/2
+	m.currLine = m.linesToShow/2 // not 0 because I'm setting the first m.linesToShow/2 lines as empty strings
 	m.numErr = 0
 	m.testBegan = false
 	m.typedErr = ""
@@ -315,7 +315,7 @@ func (m *Model) CalcCRowEnds() {
 	m.quoteLines = []string{}
 
 	for range m.linesToShow/2 {
-		m.quoteLines = append(m.quoteLines, "")
+		m.quoteLines = append(m.quoteLines, "\n")
 	}
 
 	line_start := 0
@@ -323,7 +323,7 @@ func (m *Model) CalcCRowEnds() {
 	for i, w := range m.splitQuote {
 		if counter+len(w) > m.cMaxX {
 			m.cRowEnds = append(m.cRowEnds, i)
-			m.quoteLines = append(m.quoteLines, m.quote.Quote[line_start:line_start+counter])
+			m.quoteLines = append(m.quoteLines, m.quote.Quote[line_start:line_start+counter] + "\n")
 			line_start += counter
 			counter = 0
 		}
@@ -331,9 +331,9 @@ func (m *Model) CalcCRowEnds() {
 	}
 	m.quoteLines = append(m.quoteLines, m.quote.Quote[line_start:])
 	m.cRowEnds = append(m.cRowEnds, 999) // the last row typed shouldn't trigger the cursor to go into the new line
-	for i := range m.quoteLines {
-		log.Println("Line", i, ":", m.quoteLines[i])
-	}
+	// for i := range m.quoteLines {
+	// 	log.Println("Line", i, ":", m.quoteLines[i])
+	// }
 }
 
 func HandleTyping(m *Model, key string) {
@@ -351,14 +351,14 @@ func HandleTyping(m *Model, key string) {
 	switch key {
 	case "backspace":
 		if m.typedErr != "" {
-			m.typedErr = m.typedErr[:max(len(m.typedErr)-1, 0)]
+			m.typedErr = m.typedErr[:len(m.typedErr)-1]
 			m.cursor.X -= 1
-		} else {
+		} else if m.typedWord != ""{
 			m.typedWord = m.typedWord[:max(len(m.typedWord)-1, 0)]
-			// fix cursor pos here
+			m.cursor.X -= 1
 		}
 
-	// this is actually ctrl+backspace
+	// NOTE: update cursor pos here accordingly
 	case "ctrl+backspace":
 		m.typedErr = ""
 		m.typedWord = ""

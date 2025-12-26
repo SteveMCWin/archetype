@@ -118,10 +118,12 @@ func GetHomeContents(m *Model) string {
 
 		curr_word := m.splitQuote[m.wordsTyped]
 
-		// contents = typedStyle.Render(m.typedQuote) // Already typed words
 		lines := ""
+		log.Println("Already typed rows: ")
 		for i := m.currLine-m.linesToShow/2; i < m.currLine; i++ {
-			lines += m.quoteLines[i] + "\n"
+			log.Println("Line", i, ":", m.quoteLines[i])
+			// lines += m.quoteLines[i] + "\n"
+			lines += m.quoteLines[i]
 		}
 		contents = typedStyle.Render(lines) // Already typed lines
 
@@ -142,13 +144,17 @@ func GetHomeContents(m *Model) string {
 		
 		curr_word_lens_combined := len(correctly_typed + incorrectly_typed + yet_to_type + overtyped)
 
-		// contents += quoteStyle.Render(m.quote.Quote[m.typedLen + curr_word_lens_combined :]) // Rest of the current line
 		contents += quoteStyle.Render(m.quoteLines[m.currLine][m.typedLen + curr_word_lens_combined :]) // Rest of the current line
 
-		lines = "\n"
+		log.Println("Currently typed row: ", m.quoteLines[m.currLine][:m.typedLen] + correctly_typed + incorrectly_typed + yet_to_type + overtyped + m.quoteLines[m.currLine][m.typedLen + curr_word_lens_combined :])
+
+		lines = ""
 		for i := m.currLine+1; i <= m.currLine+m.linesToShow/2 && i < len(m.quoteLines); i++ {
-			lines += m.quoteLines[i] + "\n"
+			// lines += m.quoteLines[i] + "\n"
+			lines += m.quoteLines[i]
+			log.Println(i)
 		}
+		log.Println("Lines:", lines)
 		contents += quoteStyle.Render(lines)
 
 	} else if m.quoteCompleted {
